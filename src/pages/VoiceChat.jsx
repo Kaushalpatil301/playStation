@@ -1,315 +1,342 @@
-import React, { useEffect, useRef, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import React, { useState, useRef, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 import {
-  Mic,
-  MicOff,
-  Video,
-  VideoOff,
-  LogOut,
-  ArrowLeft,
+  Send,
   Users,
-  Gamepad2,
-  Plus,
-  Headphones,
+  Activity,
+  ArrowLeft,
+  MoreVertical,
+  Paperclip,
+  Smile,
+  FileText,
+  Image as ImageIcon,
+  Film,
+  Trophy,
 } from "lucide-react";
-import { motion } from "framer-motion";
 
-const ACTIVE_PARTIES = [
-  {
-    id: "warzone-ranked",
-    name: "Warzone Resurgence",
-    game: "Call of Duty: Warzone",
-    players: 3,
-    maxPlayers: 4,
-    description: "Sweaty lobbies, need one more with a mic. Comms only.",
-  },
-  {
-    id: "ghosts-survival",
-    name: "Nightmare Survival",
-    game: "Ghost of Tsushima: Legends",
-    players: 4,
-    maxPlayers: 4,
-    description: "Need a Ronin for heals. Running the weekly.",
-  },
-  {
-    id: "helldivers-democracy",
-    name: "Spreading Democracy",
-    game: "Helldivers 2",
-    players: 3,
-    maxPlayers: 4,
-    description: "Helldive difficulty, bring orbital lasers.",
-  },
-  {
-    id: "r6-ranked",
-    name: "Ranked Push to Champ",
-    game: "Rainbow Six Siege",
-    players: 5,
-    maxPlayers: 5,
-    description: "Full squad running strats in party chat.",
-  },
-];
-
-export default function PartyVoiceChat() {
-  // Assuming the route parameter is updated to :partyId in your router
-  const { partyId } = useParams();
+export default function SquadChatRoom() {
   const navigate = useNavigate();
+  const [messages, setMessages] = useState([
+    {
+      id: 1,
+      user: "Evan Scott",
+      text: "Ooo, why don't you say something more",
+      timestamp: "11:25 AM",
+      avatar: "https://i.pravatar.cc/150?u=evan",
+      isMe: false,
+    },
+    {
+      id: 2,
+      user: "Kate Johnson",
+      text: "Working on the tactical map for the next raid! 🗺️",
+      timestamp: "11:26 AM",
+      avatar: "https://i.pravatar.cc/150?u=kate",
+      isMe: false,
+    },
+  ]);
+  const [inputValue, setInputValue] = useState("");
+  const [isTyping, setIsTyping] = useState(false);
+  const endOfMessagesRef = useRef(null);
 
-  const jitsiContainerRef = useRef(null);
-  const apiRef = useRef(null);
-
-  const [connected, setConnected] = useState(false);
-  const [micEnabled, setMicEnabled] = useState(true);
-  const [camEnabled, setCamEnabled] = useState(true);
-
-  // ===============================
-  // INIT JITSI (SHARE PLAY / VOICE)
-  // ===============================
+  // Auto-scroll to bottom on new message
   useEffect(() => {
-    if (!partyId || apiRef.current) return;
+    endOfMessagesRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, isTyping]);
 
-    const domain = "meet.jit.si";
-    const options = {
-      roomName: `PSN_Party_${partyId}_2026`,
-      parentNode: jitsiContainerRef.current,
-      width: "100%",
-      height: "100%",
-      configOverwrite: {
-        startWithAudioMuted: false,
-        startWithVideoMuted: false,
-        prejoinPageEnabled: false,
-      },
-      interfaceConfigOverwrite: {
-        SHOW_JITSI_WATERMARK: false,
-        DISABLE_JOIN_LEAVE_NOTIFICATIONS: true,
-      },
-      userInfo: {
-        displayName: "PSN User",
-      },
+  const handleSend = (e) => {
+    e.preventDefault();
+    if (!inputValue.trim()) return;
+
+    const userMsg = {
+      id: Date.now(),
+      user: "Kaushal Patil",
+      text: inputValue,
+      timestamp: new Date().toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
+      isMe: true,
     };
 
-    const api = new window.JitsiMeetExternalAPI(domain, options);
-    apiRef.current = api;
-    const iframe = api.getIFrame();
-    iframe.allow =
-      "camera *; microphone *; autoplay; fullscreen; display-capture";
+    setMessages((prev) => [...prev, userMsg]);
+    setInputValue("");
 
-    api.addListener("videoConferenceJoined", () => setConnected(true));
-    api.addListener("audioMuteStatusChanged", ({ muted }) =>
-      setMicEnabled(!muted),
-    );
-    api.addListener("videoMuteStatusChanged", ({ muted }) =>
-      setCamEnabled(!muted),
-    );
-
-    return () => {
-      api.dispose();
-      apiRef.current = null;
-    };
-  }, [partyId]);
-
-  const toggleMic = () => apiRef.current?.executeCommand("toggleAudio");
-  const toggleCam = () => apiRef.current?.executeCommand("toggleVideo");
-  const leaveParty = () => {
-    apiRef.current?.executeCommand("hangup");
-    apiRef.current?.dispose();
-    navigate("/party-voice"); // Redirect to party hub
-  };
-
-  // ===============================
-  // VIEW: PARTY SELECTION
-  // ===============================
-  if (!partyId) {
-    return (
-      <div className="h-full overflow-y-auto bg-transparent py-8 px-4 text-white font-sans flex flex-col relative">
-        {/* Ambient PlayStation UI Glow */}
-        <div className="fixed top-[-10%] left-[-10%] w-[40%] h-[40%] bg-[#0070D1]/20 blur-[150px] rounded-full pointer-events-none" />
-
-        <div className="max-w-6xl mx-auto w-full flex-1 flex flex-col relative z-10">
-          {/* Header */}
-          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-8">
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => navigate("/")}
-                className="p-3 mr-2 bg-[#000512]/60 backdrop-blur-md hover:bg-[#003791]/40 rounded-full transition-colors border border-gray-700/50 shadow-[0_0_10px_rgba(0,112,209,0.2)]"
-                title="Return to Game Base"
-              >
-                <ArrowLeft className="text-gray-200" size={20} />
-              </button>
-              <div>
-                <h1 className="text-3xl font-black tracking-tight text-white font-sans flex items-center gap-3 drop-shadow-[0_0_8px_rgba(0,112,209,0.4)]">
-                  <Headphones className="text-[#0070D1]" size={28} />
-                  Party Chat
-                </h1>
-                <p className="text-blue-100/60 font-medium">
-                  Select a live session or start your own party.
-                </p>
-              </div>
-            </div>
-
-            <button
-              onClick={() => {
-                const roomName = prompt(
-                  "Enter a name for your new PlayStation Party:",
-                );
-                if (roomName && roomName.trim() !== "") {
-                  // Create a safe URL ID
-                  const newId = roomName
-                    .trim()
-                    .toLowerCase()
-                    .replace(/[^a-z0-9]+/g, "-");
-                  if (newId) navigate(`/party-voice/${newId}`);
-                }
-              }}
-              className="flex items-center gap-2 bg-white text-[#000512] hover:bg-gray-200 px-6 py-3 rounded-2xl font-bold transition-all shadow-[0_0_20px_rgba(255,255,255,0.3)] border border-white/50"
-            >
-              <Plus size={20} className="text-[#0070D1]" />
-              START PARTY
-            </button>
-          </div>
-
-          {/* Party Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {ACTIVE_PARTIES.map((party, i) => (
-              <motion.div
-                key={party.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.1 }}
-                className="bg-[#000512]/80 backdrop-blur-md border border-[#0070D1]/20 rounded-3xl p-6 flex flex-col hover:border-[#0070D1]/60 hover:shadow-[0_0_20px_rgba(0,112,209,0.2)] transition-all shadow-lg cursor-pointer group"
-                onClick={() => {
-                  if (party.players < party.maxPlayers)
-                    navigate(`/party-voice/${party.id}`);
-                }}
-              >
-                <div className="flex justify-between items-start mb-5">
-                  <div className="bg-[#0070D1]/20 p-2.5 rounded-xl border border-[#0070D1]/30">
-                    <Gamepad2 className="text-[#0070D1]" size={24} />
-                  </div>
-                  <div
-                    className={`px-3 py-1.5 rounded-full text-xs font-bold border ${
-                      party.players >= party.maxPlayers
-                        ? "bg-red-500/10 text-red-400 border-red-500/20"
-                        : "bg-green-500/10 text-green-400 border-green-500/20"
-                    }`}
-                  >
-                    {party.players}/{party.maxPlayers} IN PARTY
-                  </div>
-                </div>
-
-                <h3 className="text-2xl font-bold text-white mb-1">
-                  {party.name}
-                </h3>
-                <p className="text-blue-200/80 text-sm font-bold tracking-wide uppercase mb-3">
-                  {party.game}
-                </p>
-                <p className="text-gray-400 text-sm mb-6 flex-1 font-medium leading-relaxed">
-                  {party.description}
-                </p>
-
-                <button
-                  className={`w-full py-3.5 rounded-xl font-bold transition-all ${
-                    party.players >= party.maxPlayers
-                      ? "bg-gray-800 text-gray-500 cursor-not-allowed border border-gray-700"
-                      : "bg-[#0070D1] text-white hover:bg-blue-500 hover:shadow-[0_0_15px_rgba(0,112,209,0.5)] border border-blue-400/30"
-                  }`}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (party.players < party.maxPlayers)
-                      navigate(`/party-voice/${party.id}`);
-                  }}
-                >
-                  {party.players >= party.maxPlayers
-                    ? "PARTY FULL"
-                    : "JOIN PARTY CHAT"}
-                </button>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // ===============================
-  // VIEW: ACTIVE PARTY SESSION
-  // ===============================
-  const activePartyDetails = ACTIVE_PARTIES.find((p) => p.id === partyId) || {
-    name: partyId.replace(/-/g, " "),
+    // Simulate "Social-First" AI response [cite: 22, 26]
+    setIsTyping(true);
+    setTimeout(() => {
+      setIsTyping(false);
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: Date.now() + 1,
+          user: "PS Assistant",
+          text: "Based on your strategy, I recommend checking the new 'Stealth Loadout' in the store! 🎮",
+          timestamp: "Just Now",
+          avatar: "https://i.pravatar.cc/150?u=ps",
+          isMe: false,
+          isAI: true,
+        },
+      ]);
+    }, 1500);
   };
 
   return (
-    <div className="flex flex-col h-full bg-[#000512] text-white">
-      {/* HEADER (Control Center Style) */}
-      <div className="flex justify-between items-center p-4 bg-[#000512]/90 backdrop-blur-xl border-b border-[#0070D1]/30 shadow-[0_5px_20px_rgba(0,30,100,0.5)] z-20">
-        <div className="flex flex-col">
-          <h2 className="text-xl font-bold text-white flex items-center gap-2 drop-shadow-[0_0_5px_rgba(255,255,255,0.3)] capitalize">
-            {activePartyDetails.name}{" "}
-            <span className="text-[10px] font-black tracking-widest bg-[#0070D1] text-white px-2 py-1 rounded-sm ml-2">
-              PARTY LIVE
+    <div className="flex h-full bg-transparent text-white overflow-hidden font-sans selection:bg-blue-500/30">
+      {/* LEFT SIDEBAR: PROFILE & FRIENDS [cite: 19] */}
+      <div className="w-72 border-r border-white/5 bg-white/[0.01] flex flex-col z-20 backdrop-blur-xl">
+        <div className="p-6">
+          <button
+            onClick={() => navigate("/")}
+            className="mb-8 p-2 bg-white/5 hover:bg-white/10 rounded-full transition-all border border-white/10"
+          >
+            <ArrowLeft size={18} className="text-gray-300" />
+          </button>
+
+          <div className="flex flex-col items-center text-center mb-10">
+            <motion.div
+              whileHover={{ scale: 1.05 }}
+              className="relative inline-block"
+            >
+              <img
+                src="https://i.pravatar.cc/150?u=kaushal"
+                className="w-20 h-20 rounded-full border-2 border-blue-500 p-1 shadow-[0_0_20px_rgba(0,114,206,0.3)]"
+                alt="Kaushal"
+              />
+              <div className="absolute bottom-1 right-1 w-4 h-4 bg-green-500 border-4 border-[#050505] rounded-full" />
+            </motion.div>
+            <h3 className="mt-4 text-lg font-bold tracking-tight">
+              Kaushal Patil
+            </h3>
+            <span className="text-[10px] text-blue-400 font-black uppercase tracking-[0.2em]">
+              Rank: Platinum Elite
             </span>
-          </h2>
-          <div className="text-sm text-gray-400 flex items-center gap-2 mt-1">
-            <span
-              className={`w-2 h-2 rounded-full ${connected ? "bg-green-500 animate-pulse" : "bg-yellow-500"}`}
-            ></span>
-            {connected
-              ? "Connected to PlayStation™Network"
-              : "Establishing connection..."}
           </div>
-        </div>
 
-        {/* DUALSENSE/PARTY CONTROLS */}
-        <div className="flex items-center gap-3 bg-[#111827]/80 p-2 rounded-2xl border border-gray-700/50 backdrop-blur-md">
-          <button
-            onClick={toggleMic}
-            className={`p-3 rounded-xl transition-all shadow-inner ${
-              micEnabled
-                ? "bg-gray-800 hover:bg-gray-700 text-white"
-                : "bg-red-500/20 text-red-500 hover:bg-red-500/30 border border-red-500/30"
-            }`}
-            title="Mute DualSense Mic"
-          >
-            {micEnabled ? <Mic size={20} /> : <MicOff size={20} />}
-          </button>
-
-          <button
-            onClick={toggleCam}
-            className={`p-3 rounded-xl transition-all shadow-inner ${
-              camEnabled
-                ? "bg-gray-800 hover:bg-gray-700 text-white"
-                : "bg-red-500/20 text-red-500 hover:bg-red-500/30 border border-red-500/30"
-            }`}
-            title="Toggle Share Screen/Camera"
-          >
-            {camEnabled ? <Video size={20} /> : <VideoOff size={20} />}
-          </button>
-
-          <div className="w-px h-8 bg-gray-700/50 mx-1"></div>
-
-          <button
-            onClick={leaveParty}
-            className="flex items-center gap-2 px-5 py-3 bg-red-600 hover:bg-red-500 text-white rounded-xl transition-all font-bold text-sm shadow-[0_0_10px_rgba(220,38,38,0.4)]"
-          >
-            <LogOut size={18} /> LEAVE PARTY
-          </button>
+          <nav className="space-y-2">
+            <p className="text-[10px] uppercase tracking-[0.2em] text-gray-500 font-bold mb-4 px-2">
+              Active Squads
+            </p>
+            {["Ghost Runners", "Apex Legends Crew", "GTA Heist"].map(
+              (squad, i) => (
+                <div
+                  key={i}
+                  className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all ${i === 0 ? "bg-blue-600/10 border border-blue-500/20 shadow-lg" : "hover:bg-white/5 opacity-60 hover:opacity-100"}`}
+                >
+                  <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-600 to-indigo-900 flex items-center justify-center font-black text-xs">
+                    {squad.charAt(0)}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-bold truncate">{squad}</p>
+                    <p className="text-[10px] text-blue-400 font-medium">
+                      4 Online
+                    </p>
+                  </div>
+                </div>
+              ),
+            )}
+          </nav>
         </div>
       </div>
 
-      {/* JITSI VIDEO/SCREEN SHARE CONTAINER */}
-      <div className="flex-1 bg-[#000512] relative">
-        {!connected && (
-          <div className="absolute inset-0 flex items-center justify-center flex-col gap-6 z-0 bg-[#000512]">
-            <div className="relative">
-              <div className="w-16 h-16 border-4 border-[#0070D1] border-t-transparent rounded-full animate-spin"></div>
-              <Gamepad2 className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-gray-600" size={24} />
+      {/* CENTER: IMMERSIVE CHAT [cite: 27, 28] */}
+      <div className="flex-1 flex flex-col bg-white/[0.02] relative border-r border-white/5">
+        {/* Header */}
+        <header className="h-20 border-b border-white/5 flex items-center justify-between px-8 bg-black/40 backdrop-blur-md">
+          <div className="flex items-center gap-4">
+            <div className="bg-blue-600/20 p-2 rounded-lg border border-blue-500/30">
+              <Users size={20} className="text-blue-400" />
             </div>
-            <p className="text-gray-400 font-bold tracking-[0.2em] text-sm">
-              CONNECTING TO PSN...
+            <div>
+              <h2 className="text-lg font-black tracking-widest uppercase">
+                Squad Lobby
+              </h2>
+              <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">
+                Encypted Channel // PSN-Secure
+              </p>
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <button className="px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg text-xs font-bold transition-all shadow-[0_0_15px_rgba(0,114,206,0.4)]">
+              Voice Chat
+            </button>
+            <button className="p-2 hover:bg-white/5 rounded-lg text-gray-400">
+              <MoreVertical size={18} />
+            </button>
+          </div>
+        </header>
+
+        {/* Chat Feed */}
+        <div className="flex-1 overflow-y-auto p-8 space-y-8 no-scrollbar">
+          <AnimatePresence>
+            {messages.map((msg) => (
+              <motion.div
+                key={msg.id}
+                initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ duration: 0.3 }}
+                className={`flex gap-4 ${msg.isMe ? "flex-row-reverse" : ""}`}
+              >
+                {!msg.isMe && (
+                  <img
+                    src={msg.avatar}
+                    className="w-10 h-10 rounded-full border border-white/10 shadow-xl"
+                    alt={msg.user}
+                  />
+                )}
+                <div
+                  className={`max-w-[70%] ${msg.isMe ? "items-end" : "items-start"} flex flex-col`}
+                >
+                  <div className="flex items-center gap-2 mb-1.5 px-1">
+                    <span
+                      className={`text-[10px] font-bold tracking-widest uppercase ${msg.isAI ? "text-blue-400" : "text-gray-400"}`}
+                    >
+                      {msg.user} {msg.isAI && "• AI"}
+                    </span>
+                    <span className="text-[9px] text-gray-600 font-mono">
+                      {msg.timestamp}
+                    </span>
+                  </div>
+                  <div
+                    className={`px-5 py-3 rounded-2xl text-sm leading-relaxed shadow-2xl transition-all hover:brightness-110 ${
+                      msg.isMe
+                        ? "bg-blue-600 text-white rounded-tr-none shadow-[0_5px_20px_rgba(0,114,206,0.2)]"
+                        : msg.isAI
+                          ? "bg-gradient-to-r from-blue-900/40 to-indigo-900/40 border border-blue-500/30 rounded-tl-none backdrop-blur-md italic"
+                          : "bg-white/5 border border-white/10 rounded-tl-none backdrop-blur-md"
+                    }`}
+                  >
+                    {msg.text}
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </AnimatePresence>
+          {isTyping && (
+            <div className="flex gap-2 p-2 items-center text-gray-500 italic text-[10px]">
+              <div className="flex gap-1">
+                <span className="animate-bounce">.</span>
+                <span className="animate-bounce [animation-delay:0.2s]">.</span>
+                <span className="animate-bounce [animation-delay:0.4s]">.</span>
+              </div>
+              Tactical Assistant is typing
+            </div>
+          )}
+          <div ref={endOfMessagesRef} />
+        </div>
+
+        {/* Input Bar */}
+        <div className="p-6 bg-black/60 border-t border-white/5 backdrop-blur-2xl">
+          <form
+            onSubmit={handleSend}
+            className="relative flex items-center gap-4 bg-white/5 border border-white/10 rounded-2xl px-5 py-3 focus-within:border-blue-500/50 transition-all shadow-inner"
+          >
+            <Paperclip
+              className="text-gray-500 cursor-pointer hover:text-blue-400 transition-colors"
+              size={20}
+            />
+            <input
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              className="flex-1 bg-transparent border-none focus:ring-0 text-sm text-white placeholder-gray-600"
+              placeholder="Type your strategy or share a clip..."
+            />
+            <div className="flex items-center gap-4">
+              <Smile
+                size={20}
+                className="text-gray-500 cursor-pointer hover:text-white"
+              />
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.9 }}
+                disabled={!inputValue.trim()}
+                type="submit"
+                className="bg-blue-600 p-2.5 rounded-xl text-white disabled:opacity-30 shadow-[0_0_20px_rgba(0,114,206,0.5)]"
+              >
+                <Send size={18} />
+              </motion.button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      {/* RIGHT PANEL: ACHIEVEMENT-BASED UI  */}
+      <div className="w-80 border-l border-white/5 bg-black/20 p-6 z-20 flex flex-col gap-8">
+        <section>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-xs font-black uppercase tracking-widest text-gray-400">
+              Lobby Assets
+            </h3>
+            <Trophy size={14} className="text-yellow-500" />
+          </div>
+          <div className="bg-gradient-to-br from-blue-600/20 to-purple-600/20 rounded-2xl p-5 border border-white/10 text-center">
+            <div className="w-12 h-12 bg-blue-600/30 rounded-full flex items-center justify-center mx-auto mb-3 border border-blue-400/30">
+              <Activity size={20} className="text-blue-400" />
+            </div>
+            <h4 className="font-bold text-sm">Squad Progress</h4>
+            <div className="w-full bg-white/5 h-1.5 rounded-full mt-3 overflow-hidden">
+              <div className="bg-blue-500 h-full w-[65%] shadow-[0_0_10px_#3b82f6]" />
+            </div>
+            <p className="text-[9px] text-gray-500 mt-2 uppercase tracking-tighter">
+              65% to Next Trophy
             </p>
           </div>
-        )}
-        <div ref={jitsiContainerRef} className="w-full h-full relative z-10" />
+        </section>
+
+        <section className="space-y-4 flex-1">
+          <div className="text-[10px] uppercase tracking-widest text-gray-500 font-bold">
+            Shared Files
+          </div>
+          {[
+            {
+              icon: <FileText size={16} />,
+              label: "Raid_Strategy.pdf",
+              size: "2.4MB",
+              color: "text-blue-400",
+            },
+            {
+              icon: <ImageIcon size={16} />,
+              label: "Boss_Spawn_Map.png",
+              size: "5.1MB",
+              color: "text-emerald-400",
+            },
+            {
+              icon: <Film size={16} />,
+              label: "Triple_Kill_Clip.mp4",
+              size: "42MB",
+              color: "text-purple-400",
+            },
+          ].map((item, i) => (
+            <motion.div
+              whileHover={{ x: 5, backgroundColor: "rgba(255,255,255,0.05)" }}
+              key={i}
+              className="flex items-center justify-between p-3 rounded-xl cursor-pointer transition-all border border-transparent hover:border-white/10"
+            >
+              <div className="flex items-center gap-3">
+                <div className={`p-2 bg-white/5 rounded-lg ${item.color}`}>
+                  {item.icon}
+                </div>
+                <div>
+                  <p className="text-xs font-bold truncate w-32">
+                    {item.label}
+                  </p>
+                  <p className="text-[10px] text-gray-500">{item.size}</p>
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </section>
+
+        <footer className="pt-4 border-t border-white/5 text-center">
+          <p className="text-[9px] text-gray-600 uppercase tracking-widest font-bold">
+            Project PlayStation // TSEC CodeCell
+          </p>
+        </footer>
       </div>
+
+      {/* AMBIENT LIGHTING EFFECTS  */}
+      <div className="fixed top-[-10%] right-[-10%] w-[50%] h-[50%] bg-blue-600/5 blur-[120px] rounded-full pointer-events-none" />
+      <div className="fixed bottom-[-5%] left-[-5%] w-[40%] h-[40%] bg-indigo-900/5 blur-[100px] rounded-full pointer-events-none" />
     </div>
   );
 }
