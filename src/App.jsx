@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import "./App.css";
 import Layout from "./components/Layout";
@@ -9,23 +9,78 @@ import ChatRoom from "./pages/ChatRoom";
 import Voting from "./pages/Voting";
 import Community from "./pages/Community";
 import ExplorePage from "./Exploreproducts/ExplorePage";
+import { Moon } from "lucide-react";
 
 function App() {
+  const [isAfk, setIsAfk] = useState(false);
+
+  useEffect(() => {
+    let timeout;
+    const AFK_TIME = 50000; // 5 seconds for testing
+
+    const handleMouseMove = () => {
+      setIsAfk(false); // Wake up
+      clearTimeout(timeout); // Clear old timer
+      timeout = setTimeout(() => setIsAfk(true), AFK_TIME); // Start new timer
+    };
+
+    // Listen ONLY for mouse movement
+    window.addEventListener("mousemove", handleMouseMove);
+
+    // Start the very first timer when the app loads
+    timeout = setTimeout(() => setIsAfk(true), AFK_TIME);
+
+    // Cleanup when component unmounts
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      clearTimeout(timeout);
+    };
+  }, []); // Empty array ensures this setup only runs once
+
   return (
-    <Router>
-      <Layout>
-        <Routes>
-          <Route path="/" element={<LandingPage />} />
-          <Route path="/squadsync" element={<SquadSync />} />
-          <Route path="/voice" element={<VoiceChat />} />
-          <Route path="/voice/:lobbyId" element={<VoiceChat />} />
-          <Route path="/chat" element={<ChatRoom />} />
-          <Route path="/voting" element={<Voting />} />
-          <Route path="/community" element={<Community />} />
-          <Route path="/explore" element={<ExplorePage />} />
-        </Routes>
-      </Layout>
-    </Router>
+    <>
+      {/* AFK Overlay */}
+      <div
+        style={{
+          position: "fixed",
+          inset: 0,
+          backgroundColor: "rgba(5, 5, 5, 0.7)",
+          backdropFilter: isAfk ? "blur(8px) brightness(60%)" : "blur(0px) brightness(100%)",
+          WebkitBackdropFilter: isAfk ? "blur(8px) brightness(60%)" : "blur(0px) brightness(100%)",
+          opacity: isAfk ? 1 : 0,
+          transition: "all 1.5s ease-in-out",
+          pointerEvents: "none",
+          zIndex: 99999,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <Moon color="#3b82f6" size={48} style={{ opacity: 0.8, marginBottom: "1rem" }} />
+        <h2 style={{ color: "white", letterSpacing: "0.4em", textTransform: "uppercase", margin: 0 }}>
+          Rest Mode
+        </h2>
+      </div>
+
+      {/* Main App Background & Router */}
+      <div style={{ minHeight: "100vh", backgroundColor: "#050505" }}>
+        <Router>
+          <Layout>
+            <Routes>
+              <Route path="/" element={<LandingPage />} />
+              <Route path="/squadsync" element={<SquadSync />} />
+              <Route path="/voice" element={<VoiceChat />} />
+              <Route path="/voice/:lobbyId" element={<VoiceChat />} />
+              <Route path="/chat" element={<ChatRoom />} />
+              <Route path="/voting" element={<Voting />} />
+              <Route path="/community" element={<Community />} />
+              <Route path="/explore" element={<ExplorePage />} />
+            </Routes>
+          </Layout>
+        </Router>
+      </div>
+    </>
   );
 }
 
