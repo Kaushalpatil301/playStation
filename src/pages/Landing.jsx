@@ -263,6 +263,4 @@ const LandingPage = () => {
       </footer>
     </div>
   );
-};
-
-export default LandingPage;
+}
