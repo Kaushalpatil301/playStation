@@ -1,8 +1,10 @@
 import React, { useState, useRef, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Send, Users, Activity, Crosshair } from "lucide-react";
+import { Send, Users, Activity, Crosshair, ArrowLeft } from "lucide-react";
 
 export default function SquadChatRoom() {
+  const navigate = useNavigate();
   const [messages, setMessages] = useState([
     {
       id: "sys-1",
@@ -48,19 +50,26 @@ export default function SquadChatRoom() {
 
   return (
     <div className="flex flex-col h-full bg-[#050505]/90 backdrop-blur-2xl rounded-[2rem] border border-white/10 shadow-[0_0_40px_rgba(37,99,235,0.1)] overflow-hidden relative">
-      
       {/* AMBIENT GLOW */}
       <div className="absolute top-0 right-0 w-64 h-64 bg-blue-600/10 rounded-full blur-[80px] pointer-events-none" />
 
       {/* HEADER: PLAYSTATION BRANDING */}
       <div className="flex items-center justify-between p-5 border-b border-white/5 bg-white/[0.02] shrink-0 z-10">
         <div className="flex items-center gap-4">
+          <button
+            onClick={() => navigate("/")}
+            className="p-2 mr-2 bg-white/5 hover:bg-white/10 rounded-full transition-colors border border-white/10"
+            title="Leave Chat & Return Home"
+          >
+            <ArrowLeft className="text-gray-300" size={20} />
+          </button>
           <div className="bg-blue-500/10 border border-blue-500/30 p-2.5 rounded-xl shadow-[0_0_15px_rgba(37,99,235,0.2)]">
             <Users className="text-blue-400" size={22} />
           </div>
           <div>
             <h2 className="text-xl font-black font-sans tracking-widest text-white uppercase flex items-center gap-2">
-              Squad Chat <Crosshair size={16} className="text-blue-500 opacity-50" />
+              Squad Chat{" "}
+              <Crosshair size={16} className="text-blue-500 opacity-50" />
             </h2>
             <p className="text-xs text-blue-400 flex items-center gap-1.5 font-bold tracking-wider mt-1">
               <span className="relative flex h-2 w-2">
@@ -106,7 +115,9 @@ export default function SquadChatRoom() {
                   alt={msg.user}
                   className="w-9 h-9 rounded-full bg-[#111] border border-white/20 shrink-0 mt-1 shadow-lg"
                 />
-                <div className={`flex flex-col ${isMe ? "items-end" : "items-start"}`}>
+                <div
+                  className={`flex flex-col ${isMe ? "items-end" : "items-start"}`}
+                >
                   <div className="flex items-center gap-2 mb-1.5">
                     <span className="text-xs font-bold text-gray-300 tracking-wide">
                       {msg.user}
