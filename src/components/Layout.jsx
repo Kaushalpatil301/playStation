@@ -4,17 +4,13 @@ import { motion } from "framer-motion";
 
 export default function Layout({ children }) {
   return (
-    <div className="flex h-screen overflow-hidden bg-[#0B1220] text-gray-200 font-sans">
+    <div className="flex h-screen overflow-hidden bg-[#00040f] text-white font-sans selection:bg-[#00f3ff]/30">
       <Sidebar />
-      <main className="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto">
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.3 }}
-          className="flex-1 max-w-5xl w-full mx-auto p-6 md:p-8"
-        >
-          {children}
-        </motion.div>
+      <main className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden relative z-0">
+        {/* Global base blue glow */}
+        <div className="fixed inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-blue-900/10 via-[#00040f]/80 to-[#00040f]" />
+
+        {children}
       </main>
     </div>
   );
