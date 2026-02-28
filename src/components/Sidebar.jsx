@@ -7,7 +7,7 @@ export default function Sidebar() {
   const navigate = useNavigate();
 
   const navItems = [
-    { label: "PSN Dashboard", path: "/", icon: Home },
+    { label: "PSN Dashboard", path: "/squadsync", icon: Home },
     { label: "Party Chat", path: "/voice", icon: Mic },
     { label: "Messages", path: "/chat", icon: MessageSquare },
     { label: "Play Together", path: "/voting", icon: BarChart2 },
@@ -18,7 +18,8 @@ export default function Sidebar() {
     <aside className="w-64 shrink-0 bg-[#000512] border-r border-[#0e1a38] flex flex-col h-full">
       <div className="p-6 text-center">
         <h1
-          className="text-xl font-bold tracking-widest text-blue-500 flex flex-col items-center gap-2 drop-shadow-[0_0_8px_rgba(59,130,246,0.8)]"
+          onClick={() => navigate("/")}
+          className="text-xl font-bold tracking-widest text-blue-500 flex flex-col items-center gap-2 drop-shadow-[0_0_8px_rgba(59,130,246,0.8)] cursor-pointer hover:opacity-80 transition-opacity"
           style={{ fontFamily: "Orbitron" }}
         >
           <svg

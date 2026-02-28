@@ -125,21 +125,30 @@ export default function SquadSync() {
           className="flex justify-between items-end"
         >
           <div>
-              <h1 className="text-4xl md:text-5xl font-black tracking-tight text-white mb-1 flex items-center gap-3 drop-shadow-[0_0_8px_rgba(0,243,255,0.4)]">
-                <Gamepad2 size={36} className="text-[#00f3ff]" />
-                PSN Dashboard
-              </h1>
-              <p className="text-blue-200/60 font-medium tracking-wide text-sm">
-                Welcome to PlayStation Network, <span className="text-white">Kaushal</span>
-              </p>
-            </div>
-            <div className="hidden md:flex items-center gap-3 bg-blue-900/20 border border-blue-500/20 px-5 py-2.5 rounded-full backdrop-blur-md shadow-[0_0_15px_rgba(0,243,255,0.1)]">
-              <span className="relative flex h-2.5 w-2.5">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#00f3ff] opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-blue-500"></span>
-              </span>
-              <span className="font-semibold text-sm tracking-wide text-blue-100">
-                45 PSN Friends Online
+            <h1 className="text-4xl md:text-5xl font-black tracking-tight text-white mb-1 flex items-center gap-3 drop-shadow-[0_0_8px_rgba(0,243,255,0.4)]">
+              <Gamepad2 size={36} className="text-[#00f3ff]" />
+              PSN Dashboard
+            </h1>
+            <p className="text-blue-200/60 font-medium tracking-wide text-sm">
+              Welcome to PlayStation Network,{" "}
+              <span className="text-white">Kaushal</span>
+            </p>
+          </div>
+          <div className="hidden md:flex items-center gap-3 bg-blue-900/20 border border-blue-500/20 px-5 py-2.5 rounded-full backdrop-blur-md shadow-[0_0_15px_rgba(0,243,255,0.1)]">
+            <span className="relative flex h-2.5 w-2.5">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#00f3ff] opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-blue-500"></span>
+            </span>
+            <span className="font-semibold text-sm tracking-wide text-blue-100">
+              45 PSN Friends Online
+            </span>
+          </div>
+        </motion.div>
+
+        {/* HERO BANNER - STANDOUT LOBBY */}
+        <motion.div
+          initial={{ opacity: 0, y: 30, scale: 0.98 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" }}
           className="relative w-full rounded-[2.5rem] overflow-hidden group shadow-[0_20px_60px_rgba(0,0,0,0.5)] min-h-[400px] flex flex-col justify-end"
         >
@@ -205,13 +214,16 @@ export default function SquadSync() {
                 className="group relative flex items-center justify-center gap-3 px-8 py-4 bg-[#00f3ff] text-[#000512] text-lg font-bold rounded-2xl hover:bg-white transition-colors shadow-[0_0_20px_rgba(0,243,255,0.6)] border border-[#00f3ff]/50"
               >
                 <div className="bg-[#000512] p-1.5 rounded-full shadow-[0_0_8px_rgba(0,243,255,0.4)]">
-                  <Play size={16} className="text-[#00f3ff] fill-[#00f3ff] ml-0.5" />
+                  <Play
+                    size={16}
+                    className="text-[#00f3ff] fill-[#00f3ff] ml-0.5"
+                  />
                 </div>
-                JOIN SQUAD
+                JOIN PARTY
               </motion.button>
             </div>
           </div>
-        </motion.section>
+        </motion.div>
 
         {/* ACTIVE LOBBIES BENTO GRID (Image-Heavy) */}
         <div className="space-y-6">

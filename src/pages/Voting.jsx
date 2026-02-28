@@ -147,7 +147,7 @@ export default function Voting() {
                       ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 cursor-default"
                       : votesFull
                         ? "bg-white/5 text-white/30 border border-white/5 cursor-not-allowed"
-                        : "bg-rose-600 text-white hover:bg-rose-500 shadow-[0_0_30px_rgba(225,29,72,0.4)]"
+                        : "bg-[#00f3ff] text-[#000512] hover:bg-white shadow-[0_0_30px_rgba(0,243,255,0.6)]"
                   }`}
                 >
                   {hasVotedForActive ? (
@@ -167,18 +167,19 @@ export default function Voting() {
 
             {/* Right Image Panel */}
             <div className="flex-1 relative min-h-[300px] md:min-h-full">
-              <div className="absolute inset-0 bg-gradient-to-r from-[#1A0B0E] via-transparent to-transparent z-10 hidden md:block" />
+              <div className="absolute inset-0 bg-gradient-to-r from-[#000512] via-transparent to-transparent z-10 hidden md:block" />
               <img
                 src={activeItem.image}
                 alt={activeItem.title}
                 className="absolute inset-0 w-full h-full object-cover object-center"
               />
+              <div className="absolute inset-0 bg-blue-600/20 mix-blend-color" />
             </div>
           </motion.div>
         </AnimatePresence>
 
         {/* 3. BENTO GRID (The Options) */}
-        <div className="bg-black/40 border border-white/5 rounded-[2rem] p-6 md:p-8 backdrop-blur-xl">
+        <div className="bg-black/40 border border-blue-900/30 rounded-[2rem] p-6 md:p-8 backdrop-blur-xl shadow-[0_0_15px_rgba(0,30,100,0.5)]">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {GAMES_LIST.map((game) => {
               const isSelected = activeItem.id === game.id;
@@ -191,8 +192,8 @@ export default function Voting() {
                   onClick={() => setActiveItem(game)}
                   className={`relative flex items-center p-4 rounded-2xl cursor-pointer transition-all duration-300 border ${
                     isSelected
-                      ? "bg-white/10 border-white/20 shadow-lg"
-                      : "bg-white/[0.02] border-white/5 hover:bg-white/[0.06]"
+                      ? "bg-blue-600/20 border-blue-500/50 shadow-[0_0_15px_rgba(0,243,255,0.2)]"
+                      : "bg-white/[0.02] border-white/5 hover:bg-blue-900/20 hover:border-blue-500/20"
                   }`}
                 >
                   {/* Game Thumbnail */}
@@ -202,6 +203,7 @@ export default function Voting() {
                       alt={game.title}
                       className="w-full h-full object-cover"
                     />
+                    <div className="absolute inset-0 bg-blue-600/20 mix-blend-color" />
                     {isVoted && (
                       <div className="absolute inset-0 bg-emerald-500/80 flex items-center justify-center backdrop-blur-sm">
                         <CheckCircle2 size={20} className="text-white" />
@@ -211,17 +213,17 @@ export default function Voting() {
 
                   {/* Game Info */}
                   <div className="flex-1 min-w-0 pr-4">
-                    <h4 className="text-white font-bold truncate text-sm">
+                    <h4 className="text-white font-bold truncate text-sm drop-shadow-[0_0_5px_rgba(0,195,255,0.3)]">
                       {game.title}
                     </h4>
-                    <p className="text-white/40 text-xs truncate">
+                    <p className="text-blue-200/40 text-xs truncate">
                       {game.developer}
                     </p>
                   </div>
 
                   {/* Link Icon */}
                   <div
-                    className={`shrink-0 p-2 rounded-full ${isSelected ? "bg-white/20 text-white" : "bg-white/5 text-white/40"}`}
+                    className={`shrink-0 p-2 rounded-full ${isSelected ? "bg-[#00f3ff]/20 text-[#00f3ff]" : "bg-white/5 text-white/40"}`}
                   >
                     <ArrowUpRight size={16} />
                   </div>

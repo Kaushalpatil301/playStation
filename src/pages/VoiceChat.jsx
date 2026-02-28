@@ -205,9 +205,9 @@ export default function VoiceChat() {
   return (
     <div className="flex flex-col h-full bg-transparent text-white">
       {/* HEADER */}
-      <div className="flex justify-between items-center p-4 bg-[#0a0f1a] border-b border-gray-800">
+      <div className="flex justify-between items-center p-4 bg-[#000512]/60 backdrop-blur-md border-b border-blue-900/50 shadow-[0_5px_15px_rgba(0,30,100,0.4)]">
         <div className="flex flex-col">
-          <h2 className="text-xl font-bold text-[#00f3ff] flex items-center gap-2">
+          <h2 className="text-xl font-bold text-[#00f3ff] flex items-center gap-2 drop-shadow-[0_0_5px_rgba(0,243,255,0.4)]">
             {activeLobbyDetails.name}{" "}
             <span className="text-xs bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded-full ml-2">
               LIVE
