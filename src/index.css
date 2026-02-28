@@ -1,0 +1,84 @@
+@import "tailwindcss";
+
+:root {
+  --ps-bg: #030510;
+  --ps-panel: rgba(14, 18, 28, 0.75);
+  --ps-neon-cyan: #00f3ff;
+  --ps-neon-blue: #0055ff;
+  --ps-neon-purple: #a600ff;
+  --ps-text: #e0e6ed;
+  --ps-text-muted: #8b9bb4;
+  --ps-glow: 0 0 20px rgba(0, 243, 255, 0.3);
+  --ps-alert: #ff0055;
+  --ps-success: #00ff88;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  font-family: "Rajdhani", sans-serif;
+  background-color: var(--ps-bg);
+  color: var(--ps-text);
+  background-image:
+    radial-gradient(circle at 15% 50%, rgba(0, 85, 255, 0.12), transparent 40%),
+    radial-gradient(circle at 85% 30%, rgba(166, 0, 255, 0.08), transparent 40%);
+  background-attachment: fixed;
+}
+
+h1,
+h2,
+h3,
+h4,
+.orbitron {
+  font-family: "Orbitron", sans-serif;
+  letter-spacing: 1px;
+}
+
+button {
+  font-family: "Orbitron", sans-serif;
+  cursor: pointer;
+  border: none;
+  outline: none;
+  background: none;
+  color: var(--ps-text);
+}
+
+/* Scrollbar theming */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.15);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 243, 255, 0.2);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 243, 255, 0.4);
+}
+
+/* Pulse animation for reuse */
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(0, 243, 255, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 8px rgba(0, 243, 255, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(0, 243, 255, 0);
+  }
+}
