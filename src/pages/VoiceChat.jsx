@@ -1,342 +1,291 @@
-import React, { useState, useRef, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import React, { useEffect, useRef, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import {
-  Send,
-  Users,
-  Activity,
+  Mic,
+  MicOff,
+  Video,
+  VideoOff,
+  LogOut,
   ArrowLeft,
-  MoreVertical,
-  Paperclip,
-  Smile,
-  FileText,
-  Image as ImageIcon,
-  Film,
-  Trophy,
+  Users,
+  Gamepad2,
+  Globe,
 } from "lucide-react";
+import { motion } from "framer-motion";
 
-export default function SquadChatRoom() {
+const LOBBIES = [
+  {
+    id: "spiderman-coop-rumor",
+    name: "Insomniac Fans Unite",
+    game: "Marvel's Spider-Man 2",
+    players: 1,
+    maxPlayers: 2,
+    description: "Discussing DLC theories and hunting the Platinum trophy.",
+  },
+  {
+    id: "helldivers-ps5-exclusive",
+    name: "SES Shield of Liberty",
+    game: "Helldivers 2",
+    players: 3,
+    maxPlayers: 4,
+    description:
+      "Level 7 Difficulty. PSN Party Chat required. For Super Earth!",
+  },
+  {
+    id: "bloodborne-coop",
+    name: "Father Gascoigne Help",
+    game: "Bloodborne",
+    players: 1,
+    maxPlayers: 3,
+    description: "Ringing the Beckoning Bell at the fog gate. Password: hunt.",
+  },
+  {
+    id: "gt7-nurburgring",
+    name: "Sunday Cruise - No Ramming",
+    game: "Gran Turismo 7",
+    players: 12,
+    maxPlayers: 16,
+    description:
+      "Clean racing only. Using DualSense Edge—let's see those lap times.",
+  },
+  {
+    id: "fortnite-ps-plus",
+    name: "PS Plus Celebration Squad",
+    game: "Fortnite",
+    players: 2,
+    maxPlayers: 4,
+    description: "Showing off the new PS Plus exclusive skins. Zero Build.",
+  },
+];
+
+export default function VoiceChat() {
+  const { lobbyId } = useParams();
   const navigate = useNavigate();
-  const [messages, setMessages] = useState([
-    {
-      id: 1,
-      user: "Evan Scott",
-      text: "Ooo, why don't you say something more",
-      timestamp: "11:25 AM",
-      avatar: "https://i.pravatar.cc/150?u=evan",
-      isMe: false,
-    },
-    {
-      id: 2,
-      user: "Kate Johnson",
-      text: "Working on the tactical map for the next raid! 🗺️",
-      timestamp: "11:26 AM",
-      avatar: "https://i.pravatar.cc/150?u=kate",
-      isMe: false,
-    },
-  ]);
-  const [inputValue, setInputValue] = useState("");
-  const [isTyping, setIsTyping] = useState(false);
-  const endOfMessagesRef = useRef(null);
 
-  // Auto-scroll to bottom on new message
+  const jitsiContainerRef = useRef(null);
+  const apiRef = useRef(null);
+
+  const [connected, setConnected] = useState(false);
+  const [micEnabled, setMicEnabled] = useState(true);
+  const [camEnabled, setCamEnabled] = useState(true);
+
+  // ===============================
+  // INIT JITSI
+  // ===============================
   useEffect(() => {
-    endOfMessagesRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, isTyping]);
+    if (!lobbyId || apiRef.current) return;
 
-  const handleSend = (e) => {
-    e.preventDefault();
-    if (!inputValue.trim()) return;
-
-    const userMsg = {
-      id: Date.now(),
-      user: "Kaushal Patil",
-      text: inputValue,
-      timestamp: new Date().toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-      }),
-      isMe: true,
+    const domain = "meet.jit.si";
+    const options = {
+      roomName: `SquadSync_${lobbyId}_Room_2026`,
+      parentNode: jitsiContainerRef.current,
+      width: "100%",
+      height: "100%",
+      configOverwrite: {
+        startWithAudioMuted: false,
+        startWithVideoMuted: false,
+        prejoinPageEnabled: false,
+      },
+      interfaceConfigOverwrite: {
+        SHOW_JITSI_WATERMARK: false,
+        DISABLE_JOIN_LEAVE_NOTIFICATIONS: true,
+      },
+      userInfo: {
+        displayName: "Squad Member",
+      },
     };
 
-    setMessages((prev) => [...prev, userMsg]);
-    setInputValue("");
+    const api = new window.JitsiMeetExternalAPI(domain, options);
+    apiRef.current = api;
+    const iframe = api.getIFrame();
+    iframe.allow =
+      "camera *; microphone *; autoplay; fullscreen; display-capture";
 
-    // Simulate "Social-First" AI response [cite: 22, 26]
-    setIsTyping(true);
-    setTimeout(() => {
-      setIsTyping(false);
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: Date.now() + 1,
-          user: "PS Assistant",
-          text: "Based on your strategy, I recommend checking the new 'Stealth Loadout' in the store! 🎮",
-          timestamp: "Just Now",
-          avatar: "https://i.pravatar.cc/150?u=ps",
-          isMe: false,
-          isAI: true,
-        },
-      ]);
-    }, 1500);
+    api.addListener("videoConferenceJoined", () => setConnected(true));
+    api.addListener("audioMuteStatusChanged", ({ muted }) =>
+      setMicEnabled(!muted),
+    );
+    api.addListener("videoMuteStatusChanged", ({ muted }) =>
+      setCamEnabled(!muted),
+    );
+
+    return () => {
+      api.dispose();
+      apiRef.current = null;
+    };
+  }, [lobbyId]);
+
+  const toggleMic = () => apiRef.current?.executeCommand("toggleAudio");
+  const toggleCam = () => apiRef.current?.executeCommand("toggleVideo");
+  const leaveLobby = () => {
+    apiRef.current?.executeCommand("hangup");
+    apiRef.current?.dispose();
+    navigate("/voice");
+  };
+
+  const handleCreateMeet = () => {
+    const newLobbyId = `custom-meet-${Date.now()}`;
+    navigate(`/voice/${newLobbyId}`);
+  };
+
+  // ===============================
+  // VIEW: LOBBY SELECTION
+  // ===============================
+  if (!lobbyId) {
+    return (
+      <div className="h-full overflow-y-auto bg-transparent py-8 px-4 text-white font-sans flex flex-col">
+        <div className="max-w-6xl mx-auto w-full flex-1 flex flex-col">
+          {/* Header */}
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-8">
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => navigate("/")}
+                className="p-2 mr-2 bg-[#111827] hover:bg-[#1f2937] rounded-full transition-colors border border-gray-800"
+                title="Return Home"
+              >
+                <ArrowLeft className="text-gray-300" size={20} />
+              </button>
+              <div>
+                <h1 className="text-3xl font-black tracking-widest text-[#00f3ff] font-sans flex items-center gap-3">
+                  <Mic className="text-blue-400" />
+                  ACTIVE COMMS
+                </h1>
+                <p className="text-[#8b9bb4]">
+                  Select a voice channel to drop into or create your own.
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={handleCreateMeet}
+              className="flex items-center gap-2 px-6 py-3 bg-[#111827] border border-blue-500/30 text-blue-400 hover:bg-blue-600 hover:text-white rounded-xl transition-all shadow-[0_0_15px_rgba(37,99,235,0.1)] hover:shadow-[0_0_20px_rgba(37,99,235,0.4)] font-bold tracking-widest text-sm"
+            >
+              <Users size={18} />
+              CREATE NEW MEET
+            </button>
+          </div>
+
+          {/* Lobby Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {LOBBIES.map((lobby, i) => (
+              <motion.div
+                key={lobby.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.1 }}
+                className="bg-[#111827] border border-gray-800 rounded-2xl p-6 flex flex-col hover:border-blue-500/50 transition-colors shadow-lg cursor-pointer"
+                onClick={() => {
+                  if (lobby.players < lobby.maxPlayers)
+                    navigate(`/voice/${lobby.id}`);
+                }}
+              >
+                <div className="flex justify-between items-start mb-4">
+                  <div className="bg-blue-500/10 p-2 rounded-lg border border-blue-500/20">
+                    <Gamepad2 className="text-blue-400" size={24} />
+                  </div>
+                  <div
+                    className={`px-3 py-1 rounded-full text-xs font-bold ${lobby.players >= lobby.maxPlayers ? "bg-red-500/20 text-red-400" : "bg-green-500/20 text-green-400"}`}
+                  >
+                    {lobby.players}/{lobby.maxPlayers} PLAYERS
+                  </div>
+                </div>
+
+                <h3 className="text-xl font-bold text-white mb-1">
+                  {lobby.name}
+                </h3>
+                <p className="text-blue-400 text-sm font-semibold mb-3">
+                  {lobby.game}
+                </p>
+                <p className="text-gray-400 text-sm mb-6 flex-1">
+                  {lobby.description}
+                </p>
+
+                <button
+                  className={`w-full py-3 rounded-xl font-bold transition-all ${lobby.players >= lobby.maxPlayers ? "bg-gray-800 text-gray-500 cursor-not-allowed" : "bg-blue-600 text-white hover:bg-blue-500 hover:shadow-[0_0_20px_rgba(37,99,235,0.4)]"}`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (lobby.players < lobby.maxPlayers)
+                      navigate(`/voice/${lobby.id}`);
+                  }}
+                >
+                  {lobby.players >= lobby.maxPlayers
+                    ? "LOBBY FULL"
+                    : "JOIN VOICE"}
+                </button>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ===============================
+  // VIEW: ACTIVE JITSI ROOM
+  // ===============================
+  const activeLobbyDetails = LOBBIES.find((l) => l.id === lobbyId) || {
+    name: lobbyId,
   };
 
   return (
-    <div className="flex h-full bg-transparent text-white overflow-hidden font-sans selection:bg-blue-500/30">
-      {/* LEFT SIDEBAR: PROFILE & FRIENDS [cite: 19] */}
-      <div className="w-72 border-r border-white/5 bg-white/[0.01] flex flex-col z-20 backdrop-blur-xl">
-        <div className="p-6">
+    <div className="flex flex-col h-full bg-transparent text-white">
+      {/* HEADER */}
+      <div className="flex justify-between items-center p-4 bg-[#000512]/60 backdrop-blur-md border-b border-blue-900/50 shadow-[0_5px_15px_rgba(0,30,100,0.4)]">
+        <div className="flex flex-col">
+          <h2 className="text-xl font-bold text-[#00f3ff] flex items-center gap-2 drop-shadow-[0_0_5px_rgba(0,243,255,0.4)]">
+            {activeLobbyDetails.name}{" "}
+            <span className="text-xs bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded-full ml-2">
+              LIVE
+            </span>
+          </h2>
+          <div className="text-sm text-gray-400 flex items-center gap-2 mt-1">
+            <span
+              className={`w-2 h-2 rounded-full ${connected ? "bg-green-500 animate-pulse" : "bg-yellow-500"}`}
+            ></span>
+            {connected
+              ? "Connected to secure channel"
+              : "Establishing connection..."}
+          </div>
+        </div>
+
+        {/* CONTROLS */}
+        <div className="flex items-center gap-4 bg-[#111827] p-2 rounded-2xl border border-gray-800">
           <button
-            onClick={() => navigate("/")}
-            className="mb-8 p-2 bg-white/5 hover:bg-white/10 rounded-full transition-all border border-white/10"
+            onClick={toggleMic}
+            className={`p-3 rounded-xl transition ${micEnabled ? "bg-gray-800 hover:bg-gray-700 text-white" : "bg-red-500/20 text-red-500 hover:bg-red-500/30"}`}
           >
-            <ArrowLeft size={18} className="text-gray-300" />
+            {micEnabled ? <Mic size={20} /> : <MicOff size={20} />}
           </button>
 
-          <div className="flex flex-col items-center text-center mb-10">
-            <motion.div
-              whileHover={{ scale: 1.05 }}
-              className="relative inline-block"
-            >
-              <img
-                src="https://i.pravatar.cc/150?u=kaushal"
-                className="w-20 h-20 rounded-full border-2 border-blue-500 p-1 shadow-[0_0_20px_rgba(0,114,206,0.3)]"
-                alt="Kaushal"
-              />
-              <div className="absolute bottom-1 right-1 w-4 h-4 bg-green-500 border-4 border-[#050505] rounded-full" />
-            </motion.div>
-            <h3 className="mt-4 text-lg font-bold tracking-tight">
-              Kaushal Patil
-            </h3>
-            <span className="text-[10px] text-blue-400 font-black uppercase tracking-[0.2em]">
-              Rank: Platinum Elite
-            </span>
-          </div>
-
-          <nav className="space-y-2">
-            <p className="text-[10px] uppercase tracking-[0.2em] text-gray-500 font-bold mb-4 px-2">
-              Active Squads
-            </p>
-            {["Ghost Runners", "Apex Legends Crew", "GTA Heist"].map(
-              (squad, i) => (
-                <div
-                  key={i}
-                  className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all ${i === 0 ? "bg-blue-600/10 border border-blue-500/20 shadow-lg" : "hover:bg-white/5 opacity-60 hover:opacity-100"}`}
-                >
-                  <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-600 to-indigo-900 flex items-center justify-center font-black text-xs">
-                    {squad.charAt(0)}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-bold truncate">{squad}</p>
-                    <p className="text-[10px] text-blue-400 font-medium">
-                      4 Online
-                    </p>
-                  </div>
-                </div>
-              ),
-            )}
-          </nav>
-        </div>
-      </div>
-
-      {/* CENTER: IMMERSIVE CHAT [cite: 27, 28] */}
-      <div className="flex-1 flex flex-col bg-white/[0.02] relative border-r border-white/5">
-        {/* Header */}
-        <header className="h-20 border-b border-white/5 flex items-center justify-between px-8 bg-black/40 backdrop-blur-md">
-          <div className="flex items-center gap-4">
-            <div className="bg-blue-600/20 p-2 rounded-lg border border-blue-500/30">
-              <Users size={20} className="text-blue-400" />
-            </div>
-            <div>
-              <h2 className="text-lg font-black tracking-widest uppercase">
-                Squad Lobby
-              </h2>
-              <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">
-                Encypted Channel // PSN-Secure
-              </p>
-            </div>
-          </div>
-          <div className="flex gap-2">
-            <button className="px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg text-xs font-bold transition-all shadow-[0_0_15px_rgba(0,114,206,0.4)]">
-              Voice Chat
-            </button>
-            <button className="p-2 hover:bg-white/5 rounded-lg text-gray-400">
-              <MoreVertical size={18} />
-            </button>
-          </div>
-        </header>
-
-        {/* Chat Feed */}
-        <div className="flex-1 overflow-y-auto p-8 space-y-8 no-scrollbar">
-          <AnimatePresence>
-            {messages.map((msg) => (
-              <motion.div
-                key={msg.id}
-                initial={{ opacity: 0, y: 20, scale: 0.95 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                transition={{ duration: 0.3 }}
-                className={`flex gap-4 ${msg.isMe ? "flex-row-reverse" : ""}`}
-              >
-                {!msg.isMe && (
-                  <img
-                    src={msg.avatar}
-                    className="w-10 h-10 rounded-full border border-white/10 shadow-xl"
-                    alt={msg.user}
-                  />
-                )}
-                <div
-                  className={`max-w-[70%] ${msg.isMe ? "items-end" : "items-start"} flex flex-col`}
-                >
-                  <div className="flex items-center gap-2 mb-1.5 px-1">
-                    <span
-                      className={`text-[10px] font-bold tracking-widest uppercase ${msg.isAI ? "text-blue-400" : "text-gray-400"}`}
-                    >
-                      {msg.user} {msg.isAI && "• AI"}
-                    </span>
-                    <span className="text-[9px] text-gray-600 font-mono">
-                      {msg.timestamp}
-                    </span>
-                  </div>
-                  <div
-                    className={`px-5 py-3 rounded-2xl text-sm leading-relaxed shadow-2xl transition-all hover:brightness-110 ${
-                      msg.isMe
-                        ? "bg-blue-600 text-white rounded-tr-none shadow-[0_5px_20px_rgba(0,114,206,0.2)]"
-                        : msg.isAI
-                          ? "bg-gradient-to-r from-blue-900/40 to-indigo-900/40 border border-blue-500/30 rounded-tl-none backdrop-blur-md italic"
-                          : "bg-white/5 border border-white/10 rounded-tl-none backdrop-blur-md"
-                    }`}
-                  >
-                    {msg.text}
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </AnimatePresence>
-          {isTyping && (
-            <div className="flex gap-2 p-2 items-center text-gray-500 italic text-[10px]">
-              <div className="flex gap-1">
-                <span className="animate-bounce">.</span>
-                <span className="animate-bounce [animation-delay:0.2s]">.</span>
-                <span className="animate-bounce [animation-delay:0.4s]">.</span>
-              </div>
-              Tactical Assistant is typing
-            </div>
-          )}
-          <div ref={endOfMessagesRef} />
-        </div>
-
-        {/* Input Bar */}
-        <div className="p-6 bg-black/60 border-t border-white/5 backdrop-blur-2xl">
-          <form
-            onSubmit={handleSend}
-            className="relative flex items-center gap-4 bg-white/5 border border-white/10 rounded-2xl px-5 py-3 focus-within:border-blue-500/50 transition-all shadow-inner"
+          <button
+            onClick={toggleCam}
+            className={`p-3 rounded-xl transition ${camEnabled ? "bg-gray-800 hover:bg-gray-700 text-white" : "bg-red-500/20 text-red-500 hover:bg-red-500/30"}`}
           >
-            <Paperclip
-              className="text-gray-500 cursor-pointer hover:text-blue-400 transition-colors"
-              size={20}
-            />
-            <input
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              className="flex-1 bg-transparent border-none focus:ring-0 text-sm text-white placeholder-gray-600"
-              placeholder="Type your strategy or share a clip..."
-            />
-            <div className="flex items-center gap-4">
-              <Smile
-                size={20}
-                className="text-gray-500 cursor-pointer hover:text-white"
-              />
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.9 }}
-                disabled={!inputValue.trim()}
-                type="submit"
-                className="bg-blue-600 p-2.5 rounded-xl text-white disabled:opacity-30 shadow-[0_0_20px_rgba(0,114,206,0.5)]"
-              >
-                <Send size={18} />
-              </motion.button>
-            </div>
-          </form>
+            {camEnabled ? <Video size={20} /> : <VideoOff size={20} />}
+          </button>
+
+          <div className="w-px h-8 bg-gray-700 mx-2"></div>
+
+          <button
+            onClick={leaveLobby}
+            className="flex items-center gap-2 px-4 py-3 bg-red-600 hover:bg-red-500 text-white rounded-xl transition font-bold text-sm"
+          >
+            <LogOut size={18} /> DISCONNECT
+          </button>
         </div>
       </div>
 
-      {/* RIGHT PANEL: ACHIEVEMENT-BASED UI  */}
-      <div className="w-80 border-l border-white/5 bg-black/20 p-6 z-20 flex flex-col gap-8">
-        <section>
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-xs font-black uppercase tracking-widest text-gray-400">
-              Lobby Assets
-            </h3>
-            <Trophy size={14} className="text-yellow-500" />
-          </div>
-          <div className="bg-gradient-to-br from-blue-600/20 to-purple-600/20 rounded-2xl p-5 border border-white/10 text-center">
-            <div className="w-12 h-12 bg-blue-600/30 rounded-full flex items-center justify-center mx-auto mb-3 border border-blue-400/30">
-              <Activity size={20} className="text-blue-400" />
-            </div>
-            <h4 className="font-bold text-sm">Squad Progress</h4>
-            <div className="w-full bg-white/5 h-1.5 rounded-full mt-3 overflow-hidden">
-              <div className="bg-blue-500 h-full w-[65%] shadow-[0_0_10px_#3b82f6]" />
-            </div>
-            <p className="text-[9px] text-gray-500 mt-2 uppercase tracking-tighter">
-              65% to Next Trophy
+      {/* JITSI VIDEO CONTAINER */}
+      <div className="flex-1 bg-black relative">
+        {!connected && (
+          <div className="absolute inset-0 flex items-center justify-center flex-col gap-4 z-0">
+            <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+            <p className="text-gray-400 font-medium tracking-widest text-sm">
+              INITIALIZING PROTOCOLS...
             </p>
           </div>
-        </section>
-
-        <section className="space-y-4 flex-1">
-          <div className="text-[10px] uppercase tracking-widest text-gray-500 font-bold">
-            Shared Files
-          </div>
-          {[
-            {
-              icon: <FileText size={16} />,
-              label: "Raid_Strategy.pdf",
-              size: "2.4MB",
-              color: "text-blue-400",
-            },
-            {
-              icon: <ImageIcon size={16} />,
-              label: "Boss_Spawn_Map.png",
-              size: "5.1MB",
-              color: "text-emerald-400",
-            },
-            {
-              icon: <Film size={16} />,
-              label: "Triple_Kill_Clip.mp4",
-              size: "42MB",
-              color: "text-purple-400",
-            },
-          ].map((item, i) => (
-            <motion.div
-              whileHover={{ x: 5, backgroundColor: "rgba(255,255,255,0.05)" }}
-              key={i}
-              className="flex items-center justify-between p-3 rounded-xl cursor-pointer transition-all border border-transparent hover:border-white/10"
-            >
-              <div className="flex items-center gap-3">
-                <div className={`p-2 bg-white/5 rounded-lg ${item.color}`}>
-                  {item.icon}
-                </div>
-                <div>
-                  <p className="text-xs font-bold truncate w-32">
-                    {item.label}
-                  </p>
-                  <p className="text-[10px] text-gray-500">{item.size}</p>
-                </div>
-              </div>
-            </motion.div>
-          ))}
-        </section>
-
-        <footer className="pt-4 border-t border-white/5 text-center">
-          <p className="text-[9px] text-gray-600 uppercase tracking-widest font-bold">
-            Project PlayStation // TSEC CodeCell
-          </p>
-        </footer>
+        )}
+        <div ref={jitsiContainerRef} className="w-full h-full relative z-10" />
       </div>
-
-      {/* AMBIENT LIGHTING EFFECTS  */}
-      <div className="fixed top-[-10%] right-[-10%] w-[50%] h-[50%] bg-blue-600/5 blur-[120px] rounded-full pointer-events-none" />
-      <div className="fixed bottom-[-5%] left-[-5%] w-[40%] h-[40%] bg-indigo-900/5 blur-[100px] rounded-full pointer-events-none" />
     </div>
   );
 }
