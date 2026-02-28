@@ -2,7 +2,7 @@ import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import "./App.css";
 import Layout from "./components/Layout";
-import LandingPage from "./Exploreproducts/k";
+import LandingPage from "./pages/Landing";
 import SquadSync from "./pages/SquadSync";
 import VoiceChat from "./pages/VoiceChat";
 import ChatRoom from "./pages/ChatRoom";
